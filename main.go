@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"log"
+	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"time"
 )
@@ -12,9 +15,13 @@ import (
 func main() {
 	r := chi.NewRouter()
 
-	// ...
+	rp := NewReverseProxy("hugo", ":1313")
 
-	http.ListenAndServe(":8080", r)
+	r.Use(rp.ReverseProxy)
+
+	r.Get("/api/", handleApiRoute)
+
+	http.ListenAndServe("localhost:8080", r)
 }
 
 type ReverseProxy struct {
@@ -31,7 +38,17 @@ func NewReverseProxy(host, port string) *ReverseProxy {
 
 func (rp *ReverseProxy) ReverseProxy(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+		fmt.Println(r.URL.Path)
+		if r.URL.Path != "/api/" {
+			fmt.Println(r.URL.Path)
+			newProxyUrl := url.URL{
+				Scheme: "http",
+				Host:   net.JoinHostPort(rp.host, rp.port)}
+			rp := httputil.NewSingleHostReverseProxy(&newProxyUrl)
+			rp.ServeHTTP(w, r)
+		} else {
+			next.ServeHTTP(w, r)
+		}
 	})
 }
 
@@ -50,4 +67,13 @@ func WorkerTest() {
 			b++
 		}
 	}
+}
+
+func handleApiRoute(w http.ResponseWriter, r *http.Request) {
+	_, err := w.Write([]byte("Hello from API"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 }
