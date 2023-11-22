@@ -5,7 +5,7 @@ FROM golang:1.16-alpine as builder
 WORKDIR /app
 
 # Копируем исходники приложения в рабочую директорию
-COPY ../hugoproxy-main/proxy .
+COPY . .
 # Скачиваем все зависимости
 RUN go mod init test && go mod tidy
 
@@ -23,3 +23,4 @@ EXPOSE 8080
 
 # Запускаем приложение
 CMD ["/main"]
+
