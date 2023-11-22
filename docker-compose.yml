@@ -4,7 +4,7 @@ services:
   server:
     image: klakegg/hugo:0.101.0-ext-alpine
     container_name: hugo
-    command: server
+    command: server --baseURL http://hugo:1313/
     entrypoint: hugo
     volumes:
       - "./hugo:/src"
