@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+
+	// Команда для выполнения внутри контейнера
 	filePath := "test/_index.md"
 	file, err := os.OpenFile(filePath, os.O_RDWR, os.ModePerm)
 	if err != nil {
@@ -22,41 +24,34 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	// Обрезаем файл до нулевой длины
-	err = file.Truncate(0)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	str := strings.Split(string(oldData), "\n")
 	counter := 1
-	//time
-	for i, s := range str {
-		//время
-		if strings.Contains(s, "Текущее время:") {
-			fmt.Println(s)
-			currentTimeStr := fmt.Sprintf("Текущее время: %d-%d-%d %d:%d:%d",
-				time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
-			str[i] = currentTimeStr
+	for {
+		for i, s := range str {
+			//время
+			if strings.Contains(s, "Текущее время:") {
+				fmt.Println(s)
+				currentTimeStr := fmt.Sprintf("Текущее время: %d-%d-%d %d:%d:%d",
+					time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
+				str[i] = currentTimeStr
+			}
+			//счетчик
+			if strings.Contains(s, "Счетчик:") {
+				fmt.Println(s)
+				currentCounter := fmt.Sprintf("Счетчик: %d", counter)
+				str[i] = currentCounter
+				counter++
+			}
 		}
-		//счетчик
-		if strings.Contains(s, "Счетчик:") {
-			fmt.Println(s)
-			currentCounter := fmt.Sprintf("Счетчик: %d", counter)
-			str[i] = currentCounter
-			counter++
+		newData := strings.Join(str, "\n")
+		err := os.WriteFile("test/_index.md", []byte(newData), 0644)
+		if err != nil {
+			log.Println(err)
+			if counter == 150 {
+				break
+			}
 		}
-	}
-	newData := strings.Join(str, "\n")
-
-	_, err = file.WriteString(newData)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(newData)
-	// Сбрасываем буфер и сохраняем изменения на диск
-	err = file.Sync()
-	if err != nil {
-		log.Fatal(err)
+		time.Sleep(5 * time.Second)
 	}
 }

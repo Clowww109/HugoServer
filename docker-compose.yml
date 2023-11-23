@@ -6,6 +6,8 @@ services:
     container_name: hugo
     command: server --baseURL http://hugo:1313/
     entrypoint: hugo
+    environment:
+    - TZ=Europe/Moscow
     volumes:
       - "./hugo:/src"
     ports:

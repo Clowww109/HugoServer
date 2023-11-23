@@ -1,4 +1,4 @@
-baseURL = 'http://hugo:1313/'
+baseURL = 'http://example.org/'
 languageCode = 'en-us'
 title = 'Задачи с proxy'
 theme = 'hugo-book'

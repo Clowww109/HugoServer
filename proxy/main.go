@@ -24,9 +24,7 @@ func main() {
 
 	fmt.Println("Сервер стартует")
 
-	//WorkerTest()
-
-	//go WorkerTask1()
+	go WorkerTask1()
 
 	http.ListenAndServe(":8080", r)
 
@@ -64,19 +62,57 @@ func (rp *ReverseProxy) ReverseProxy(next http.Handler) http.Handler {
 
 }
 
-const content = ``
-
-//func WorkerTest() {
-//	t := time.NewTicker(1 * time.Second)
-//	var b byte = 0
+////func WorkerTest() {
+//	// Команда для выполнения внутри контейнера
+//	filePath := "/app/static/tasks/_index.md"
+//	file, err := os.OpenFile(filePath, os.O_RDWR, os.ModePerm)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	defer file.Close()
+//
+//	oldData, err := io.ReadAll(file)
+//	if err != nil {
+//		fmt.Println(err)
+//		os.Exit(1)
+//	}
+//	// Обрезаем файл до нулевой длины
+//	err = file.Truncate(0)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	str := strings.Split(string(oldData), "\n")
+//	counter := 1
 //	for {
-//		select {
-//		case <-t.C:
-//			err := os.WriteFile("/app/static/_index.md", []byte(fmt.Sprintf(content, b)), 0644)
-//			if err != nil {
-//				log.Println(err)
+//		for i, s := range str {
+//			//время
+//			if strings.Contains(s, "Текущее время:") {
+//				fmt.Println(s)
+//				currentTimeStr := fmt.Sprintf("Текущее время: %d-%d-%d %d:%d:%d",
+//					time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
+//				str[i] = currentTimeStr
 //			}
-//			b++
+//			//счетчик
+//			if strings.Contains(s, "Счетчик:") {
+//				fmt.Println(s)
+//				currentCounter := fmt.Sprintf("Счетчик: %d", counter)
+//				str[i] = currentCounter
+//				counter++
+//			}
+//		}
+//		newData := strings.Join(str, "\n")
+//
+//		t := time.NewTicker(5 * time.Second)
+//
+//		for {
+//			select {
+//			case <-t.C:
+//				err := os.WriteFile("/app/static/_index.md", []byte(newData), 0644)
+//				if err != nil {
+//					log.Println(err)
+//				}
+//			}
 //		}
 //	}
 //}
@@ -93,7 +129,7 @@ func handleApiRoute(w http.ResponseWriter, r *http.Request) {
 func WorkerTask1() {
 	// Команда для выполнения внутри контейнера
 	filePath := "/app/static/tasks/_index.md"
-	file, err := os.OpenFile(filePath, os.O_RDWR, os.ModePerm)
+	file, err := os.OpenFile(filePath, os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,11 +139,6 @@ func WorkerTask1() {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
-	// Обрезаем файл до нулевой длины
-	err = file.Truncate(0)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	str := strings.Split(string(oldData), "\n")
@@ -130,20 +161,13 @@ func WorkerTask1() {
 			}
 		}
 		newData := strings.Join(str, "\n")
-
-		_, err = file.WriteString(newData)
+		err := os.WriteFile("/app/static/tasks/_index.md", []byte(newData), 0644)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			if counter == 150 {
+				break
+			}
 		}
-		// Сбрасываем буфер и сохраняем изменения на диск
-		err = file.Sync()
-		if err != nil {
-			log.Fatal(err)
-		}
-		//Не хочется делать совсем бесконечно
-		if counter == 150 {
-			break
-		}
-		time.Sleep(time.Second * 5)
+		time.Sleep(5 * time.Second)
 	}
 }
