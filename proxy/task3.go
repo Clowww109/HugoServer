@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"github.com/brianvoe/gofakeit"
 	"io"
-	"log"
 	"os"
 	"strings"
-	"time"
 )
 
 type Node struct {
@@ -83,11 +81,8 @@ func NewNodes(count int) []*Node {
 }
 
 func GetTask3page() string {
-	count := gofakeit.Number(5, 30)
-	nodes := NewNodes(count)
-	mermGraph := GetMermaids(nodes)
 
-	filePath := "test/binary.md"
+	filePath := "/app/static/tasks/graph.md"
 	file, err := os.OpenFile(filePath, os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Println(err)
@@ -107,19 +102,13 @@ func GetTask3page() string {
 			break
 		}
 	}
+	//начинается рандом
+	count := gofakeit.Number(5, 30)
+	nodes := NewNodes(count)
+	mermGraph := GetMermaids(nodes)
+
 	str = append(str, mermGraph)
 	newData := strings.Join(str, "\n")
 
 	return newData
-}
-
-func main() {
-	for {
-		res := GetTask3page()
-		err := os.WriteFile("test/binary.md", []byte(res), 0644)
-		if err != nil {
-			log.Println(err)
-		}
-		time.Sleep(5 * time.Second)
-	}
 }

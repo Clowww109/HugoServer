@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi"
-	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -25,6 +24,8 @@ func main() {
 	fmt.Println("Сервер стартует")
 
 	go WorkerTask1()
+	go WorkerTask2()
+	go WorkerTask3()
 
 	http.ListenAndServe(":8080", r)
 
@@ -62,61 +63,6 @@ func (rp *ReverseProxy) ReverseProxy(next http.Handler) http.Handler {
 
 }
 
-////func WorkerTest() {
-//	// Команда для выполнения внутри контейнера
-//	filePath := "/app/static/tasks/_index.md"
-//	file, err := os.OpenFile(filePath, os.O_RDWR, os.ModePerm)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	defer file.Close()
-//
-//	oldData, err := io.ReadAll(file)
-//	if err != nil {
-//		fmt.Println(err)
-//		os.Exit(1)
-//	}
-//	// Обрезаем файл до нулевой длины
-//	err = file.Truncate(0)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//
-//	str := strings.Split(string(oldData), "\n")
-//	counter := 1
-//	for {
-//		for i, s := range str {
-//			//время
-//			if strings.Contains(s, "Текущее время:") {
-//				fmt.Println(s)
-//				currentTimeStr := fmt.Sprintf("Текущее время: %d-%d-%d %d:%d:%d",
-//					time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
-//				str[i] = currentTimeStr
-//			}
-//			//счетчик
-//			if strings.Contains(s, "Счетчик:") {
-//				fmt.Println(s)
-//				currentCounter := fmt.Sprintf("Счетчик: %d", counter)
-//				str[i] = currentCounter
-//				counter++
-//			}
-//		}
-//		newData := strings.Join(str, "\n")
-//
-//		t := time.NewTicker(5 * time.Second)
-//
-//		for {
-//			select {
-//			case <-t.C:
-//				err := os.WriteFile("/app/static/_index.md", []byte(newData), 0644)
-//				if err != nil {
-//					log.Println(err)
-//				}
-//			}
-//		}
-//	}
-//}
-
 func handleApiRoute(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte("Hello from API"))
 	if err != nil {
@@ -127,46 +73,38 @@ func handleApiRoute(w http.ResponseWriter, r *http.Request) {
 }
 
 func WorkerTask1() {
-	// Команда для выполнения внутри контейнера
-	filePath := "/app/static/tasks/_index.md"
-	file, err := os.OpenFile(filePath, os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	oldData, err := io.ReadAll(file)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	str := strings.Split(string(oldData), "\n")
-	counter := 1
 	for {
-		for i, s := range str {
-			//время
-			if strings.Contains(s, "Текущее время:") {
-				fmt.Println(s)
-				currentTimeStr := fmt.Sprintf("Текущее время: %d-%d-%d %d:%d:%d",
-					time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
-				str[i] = currentTimeStr
-			}
-			//счетчик
-			if strings.Contains(s, "Счетчик:") {
-				fmt.Println(s)
-				currentCounter := fmt.Sprintf("Счетчик: %d", counter)
-				str[i] = currentCounter
-				counter++
-			}
-		}
-		newData := strings.Join(str, "\n")
-		err := os.WriteFile("/app/static/tasks/_index.md", []byte(newData), 0644)
+		res := GetTask1Page()
+		err := os.WriteFile("/app/static/tasks/_index.md", []byte(res), 0644)
 		if err != nil {
 			log.Println(err)
-			if counter == 150 {
-				break
-			}
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func WorkerTask2() {
+	counter := 5
+	for {
+		res := GetTask2Page(counter)
+		err := os.WriteFile("/app/static/tasks/binary.md", []byte(res), 0644)
+		if err != nil {
+			log.Println(err)
+		}
+		counter++
+		time.Sleep(5 * time.Second)
+		if counter == 100 {
+			counter = 5
+		}
+	}
+}
+
+func WorkerTask3() {
+	for {
+		res := GetTask3page()
+		err := os.WriteFile("/app/static/tasks/graph.md", []byte(res), 0644)
+		if err != nil {
+			log.Println(err)
 		}
 		time.Sleep(5 * time.Second)
 	}
